@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      # NOTE: Use the same DB name/user/password as in DATABASE_URL below.
+      POSTGRES_DB: taskflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - taskflow_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - taskflow_redisdata:/data
+  api:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      # NOTE: Keep credentials/DB name in sync with the db service environment above.
+      DATABASE_URL: postgres://postgres:postgres@db:5432/taskflow?sslmode=disable
+      REDIS_ADDR: redis:6379
+      API_KEY: dev-secret-key
+
+    ports:
+      - "8080:8080"
+
+  migrate:
+    image: postgres:15
+    depends_on:
+      - db
+    environment:
+      PGPASSWORD: postgres
+    volumes:
+      - ./migrations:/migrations:ro
+    command: >
+      sh -c "until pg_isready -h db -U postgres; do sleep 1; done;
+      cat /migrations/*.sql | psql -h db -U postgres -d taskflow"
+
+volumes:
+  taskflow_pgdata:
+  taskflow_redisdata:

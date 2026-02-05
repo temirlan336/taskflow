@@ -1,0 +1,2 @@
+ALTER TABLE events
+DROP CONSTRAINT IF EXISTS fk_task_id;
