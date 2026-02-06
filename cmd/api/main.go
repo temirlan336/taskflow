@@ -102,6 +102,6 @@ func main() {
 		log.Fatalf("Error during shutdown: %v\n", err)
 	}
 
-	log.Println("Server stopped")
+	log.Println("Server stopped. Bye!")
 
 }
